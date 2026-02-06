@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Grab: Beat the Clock</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f1f2f6;
+      text-align: center;
+      padding: 30px;
+    }
+
+    h1 {
+      color: #2ecc71;
+    }
+
+    .card {
+      max-width: 420px;
+      margin: auto;
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    #timer {
+      font-size: 32px;
+      color: #e74c3c;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 8px 0;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #2ecc71;
+      color: white;
+    }
+
+    button:disabled {
+      background: #b2bec3;
+    }
+
+    #status {
+      margin: 15px 0;
+      min-height: 40px;
+      font-size: 18px;
+    }
+
+    #animation {
+      font-size: 40px;
+      margin: 10px 0;
+    }
+
+    #progressContainer {
+      background: #dfe6e9;
+      border-radius: 10px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    #progressBar {
+      height: 20px;
+      width: 0%;
+      background: #2ecc71;
+    }
+
+    #progressText {
+      margin-top: 5px;
+      font-weight: bold;
+    }
+
+    #result {
+      font-size: 22px;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+
+    /* Virtual voucher card styling */
+    #voucher {
+      display: none;
+      margin-top: 20px;
+    }
+
+    #voucherCard {
+      background: #2ecc71;
+      color: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      font-family: Arial, sans-serif;
+    }
+
+    #voucherCard .voucher-title {
+      font-size: 30px;
+      margin-bottom: 10px;
+    }
+
+    #voucherCard .voucher-msg {
+      font-size: 18px;
+      margin-bottom: 15px;
+    }
+
+    #voucherCard .voucher-code {
+      background: white;
+      color: #2ecc71;
+      padding: 10px;
+      border-radius: 8px;
+      font-weight: bold;
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>🛵 Grab: Beat the Clock</h1>
+
+<div class="card">
+
+  <!-- INTRO -->
+  <div id="intro">
+    <p><strong>Choose the suitable scenario to deliver on time.</strong></p>
+    <button onclick="chooseScenario('traffic')">🚗 Heavy Traffic</button>
+    <button onclick="chooseScenario('rain')">🌧️ Rainy Day</button>
+    <button onclick="chooseScenario('peak')">⏰ Peak Hour</button>
+  </div>
+
+  <!-- GAME -->
+  <div id="game" style="display:none;">
+    <div>⏳ Time Remaining</div>
+    <div id="timer">20</div>
+
+    <div>📦 Delivery Progress</div>
+    <div id="progressContainer">
+      <div id="progressBar"></div>
+    </div>
+    <div id="progressText">0%</div>
+
+    <div id="animation">🛵 ➡️</div>
+    <div id="status"></div>
+
+    <button onclick="takeAction('lane')">🚗 Change Lane</button>
+    <button onclick="takeAction('speed')">⚡ Speed Up</button>
+    <button onclick="takeAction('shortcut')">🗺️ Take Shortcut</button>
+
+    <div id="result"></div>
+
+    <!-- VIRTUAL VOUCHER CARD -->
+    <div id="voucher">
+      <div id="voucherCard">
+        <div class="voucher-title">🛵 Hijau Voucher</div>
+        <div class="voucher-msg">🎉 Congratulations! Your delivery was on time.</div>
+        <div class="voucher-code" id="voucherCodeCard">HIJAU-XXXXXX</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  let timeLeft = 20;
+  let progress = 0;
+  let gameOver = false;
+  let countdown;
+
+  const introEl = document.getElementById("intro");
+  const gameEl = document.getElementById("game");
+  const timerEl = document.getElementById("timer");
+  const statusEl = document.getElementById("status");
+  const animationEl = document.getElementById("animation");
+  const progressBar = document.getElementById("progressBar");
+  const progressText = document.getElementById("progressText");
+  const resultEl = document.getElementById("result");
+  const voucherEl = document.getElementById("voucher");
+  const voucherCodeEl = document.getElementById("voucherCodeCard");
+  const buttons = document.querySelectorAll("#game button");
+
+  function chooseScenario(type) {
+    introEl.style.display = "none";
+    gameEl.style.display = "block";
+
+    if (type === "traffic") {
+      timeLeft = 18;
+      statusEl.textContent = "Traffic jam everywhere. Stay calm.";
+      animationEl.textContent = "🛵 🚗🚗🚗";
+    }
+
+    if (type === "rain") {
+      timeLeft = 20;
+      statusEl.textContent = "Rain reduces visibility. Ride carefully.";
+      animationEl.textContent = "🛵 🌧️";
+    }
+
+    if (type === "peak") {
+      timeLeft = 16;
+      statusEl.textContent = "Peak hour rush! Orders piling up.";
+      animationEl.textContent = "🛵 ⏰";
+    }
+
+    updateUI();
+    startTimer();
+  }
+
+  function startTimer() {
+    countdown = setInterval(() => {
+      if (gameOver) return;
+
+      timeLeft--;
+      updateUI();
+
+      if (timeLeft <= 0) {
+        endGame(false);
+      }
+    }, 1000);
+  }
+
+  function takeAction(action) {
+    if (gameOver) return;
+
+    let r = Math.random();
+
+    if (action === "lane") {
+      if (r > 0.5) {
+        timeLeft += 2;
+        progress += 10;
+        statusEl.textContent = "Smooth lane change! +10% progress";
+      } else {
+        timeLeft -= 2;
+        statusEl.textContent = "Blocked by traffic! -2s";
+      }
+    }
+
+    if (action === "speed") {
+      if (r > 0.6) {
+        timeLeft += 3;
+        progress += 15;
+        statusEl.textContent = "Clear road ahead! +15% progress";
+      } else {
+        timeLeft -= 3;
+        statusEl.textContent = "Forced to slow down! -3s";
+      }
+    }
+
+    if (action === "shortcut") {
+      if (r > 0.4) {
+        timeLeft += 4;
+        progress += 25;
+        statusEl.textContent = "Shortcut works! +25% progress";
+      } else {
+        timeLeft -= 4;
+        statusEl.textContent = "Wrong turn! -4s";
+      }
+    }
+
+    if (progress > 100) progress = 100;
+    if (timeLeft < 0) timeLeft = 0;
+
+    updateUI();
+
+    if (progress >= 100) endGame(true);
+    if (timeLeft <= 0) endGame(false);
+  }
+
+  function updateUI() {
+    timerEl.textContent = timeLeft;
+    progressBar.style.width = progress + "%";
+    progressText.textContent = progress + "%";
+  }
+
+  function endGame(win) {
+    gameOver = true;
+    clearInterval(countdown);
+    buttons.forEach(b => b.disabled = true);
+
+    if (win) {
+      resultEl.textContent = "✅ Delivery Completed On Time!";
+      resultEl.style.color = "green";
+
+      // Generate voucher code
+      const code = "HIJAU-" + Math.random().toString(36).substr(2,6).toUpperCase();
+      voucherCodeEl.textContent = code;
+      voucherEl.style.display = "block";
+    } else {
+      resultEl.textContent = "❌ Delivery Failed. Time’s Up!";
+      resultEl.style.color = "red";
+    }
+  }
+</script>
+
+</body>
+</html>
