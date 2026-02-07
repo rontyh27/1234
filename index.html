@@ -1,298 +1,268 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Grab: Beat the Clock</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f1f2f6;
-      text-align: center;
-      padding: 20px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grab: Beat The Clock</title>
 
-    h1 {
-      color: #2ecc71;
-      font-size: 32px;
-      margin-bottom: 10px;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #ecf0f1;
+  text-align: center;
+}
 
-    .card {
-      max-width: 500px;
-      margin: auto;
-      background: white;
-      padding: 30px;
-      border-radius: 12px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
+h1 { color: #2ecc71; }
 
-    #timer {
-      font-size: 48px;
-      color: #e74c3c;
-      font-weight: bold;
-      margin: 15px 0;
-    }
+.screen { display: none; padding: 20px; }
+.active { display: block; }
 
-    button {
-      width: 100%;
-      padding: 16px;
-      margin: 10px 0;
-      font-size: 20px;
-      border: none;
-      border-radius: 12px;
-      cursor: pointer;
-      background: #2ecc71;
-      color: white;
-    }
+/* GAME AREA */
+#gameWrapper {
+  padding-bottom: 140px; /* 🔑 space for controls */
+}
 
-    button:disabled {
-      background: #b2bec3;
-    }
+#gameArea {
+  width: 360px;
+  height: 520px;
+  background: #fff;
+  margin: auto;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
 
-    #status {
-      margin: 20px 0;
-      min-height: 50px;
-      font-size: 20px;
-    }
+/* PLAYER */
+#player {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  font-size: 32px;
+  left: 160px;
+  top: 440px;
+}
 
-    #animation {
-      font-size: 60px;
-      margin: 15px 0;
-    }
+/* DESTINATION */
+#destination {
+  position: absolute;
+  top: 10px;
+  left: 155px;
+  font-size: 36px;
+}
 
-    #progressContainer {
-      background: #dfe6e9;
-      border-radius: 12px;
-      overflow: hidden;
-      margin-top: 15px;
-    }
+/* OBSTACLE */
+.obstacle {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  font-size: 32px;
+}
 
-    #progressBar {
-      height: 30px;
-      width: 0%;
-      background: #2ecc71;
-    }
+/* HUD */
+#hud {
+  font-size: 20px;
+  margin: 10px;
+}
 
-    #progressText {
-      margin-top: 10px;
-      font-weight: bold;
-      font-size: 20px;
-    }
+/* CONTROLS */
+#controls {
+  position: fixed;
+  bottom: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 260px;
+  display: grid;
+  grid-template-columns: 80px 80px 80px;
+  grid-template-rows: 80px 80px;
+  gap: 10px;
+  z-index: 999;
+}
 
-    #result {
-      font-size: 26px;
-      margin-top: 20px;
-      font-weight: bold;
-    }
+.control-btn {
+  font-size: 30px;
+  border-radius: 15px;
+  border: none;
+  background: #2ecc71;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
 
-    /* Virtual voucher card styling */
-    #voucher {
-      display: none;
-      margin-top: 25px;
-    }
+.control-btn:active {
+  transform: scale(0.95);
+  background: #27ae60;
+}
 
-    #voucherCard {
-      background: #2ecc71;
-      color: white;
-      border-radius: 16px;
-      padding: 25px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-      font-family: Arial, sans-serif;
-    }
+/* VOUCHER */
+#voucherCard {
+  background: #2ecc71;
+  color: white;
+  border-radius: 15px;
+  padding: 20px;
+  margin: 20px auto;
+  width: 300px;
+}
 
-    #voucherCard .voucher-title {
-      font-size: 34px;
-      margin-bottom: 12px;
-    }
-
-    #voucherCard .voucher-msg {
-      font-size: 20px;
-      margin-bottom: 18px;
-    }
-
-    #voucherCard .voucher-code {
-      background: white;
-      color: #2ecc71;
-      padding: 14px;
-      border-radius: 12px;
-      font-weight: bold;
-      font-size: 28px;
-    }
-  </style>
+.voucher-code {
+  background: white;
+  color: #2ecc71;
+  font-size: 24px;
+  padding: 10px;
+  border-radius: 10px;
+  margin-top: 10px;
+  font-weight: bold;
+}
+</style>
 </head>
+
 <body>
 
-<h1>🛵 Grab: Beat the Clock</h1>
+<!-- INTRO -->
+<div id="intro" class="screen active">
+  <h1>🛵 Grab: Beat The Clock</h1>
+  <p><strong>Deliver the food before time runs out.</strong></p>
+  <p>Dodge traffic and reach the customer safely.</p>
+  <button class="control-btn" style="width:220px" onclick="startGame()">START DELIVERY</button>
+</div>
 
-<div class="card">
+<!-- GAME -->
+<div id="game" class="screen">
+  <div id="hud">⏳ Time Left: <span id="time">30</span>s</div>
 
-  <!-- INTRO -->
-  <div id="intro">
-    <p style="font-size:20px;"><strong>Choose a scenario and then pick actions to extend time so your food is delivered successfully!</strong></p>
-    <button onclick="chooseScenario('traffic')">🚗 Heavy Traffic</button>
-    <button onclick="chooseScenario('rain')">🌧️ Rainy Day</button>
-    <button onclick="chooseScenario('peak')">⏰ Peak Hour</button>
-  </div>
-
-  <!-- GAME -->
-  <div id="game" style="display:none;">
-    <div>⏳ Time Remaining</div>
-    <div id="timer">20</div>
-
-    <div>📦 Delivery Progress</div>
-    <div id="progressContainer">
-      <div id="progressBar"></div>
+  <div id="gameWrapper">
+    <div id="gameArea">
+      <div id="destination">🏠</div>
+      <div id="player">🛵</div>
     </div>
-    <div id="progressText">0%</div>
-
-    <div id="animation">🛵 ➡️</div>
-    <div id="status"></div>
-
-    <button onclick="takeAction('lane')">🚗 Change Lane (+Extend Time)</button>
-    <button onclick="takeAction('speed')">⚡ Speed Up (+Extend Time)</button>
-    <button onclick="takeAction('shortcut')">🗺️ Take Shortcut (+Extend Time)</button>
-
-    <div id="result"></div>
-
-    <!-- VIRTUAL VOUCHER CARD -->
-    <div id="voucher">
-      <div id="voucherCard">
-        <div class="voucher-title">🛵 Hijau Voucher</div>
-        <div class="voucher-msg">🎉 Congratulations! Your delivery was on time.</div>
-        <div class="voucher-code" id="voucherCodeCard">HIJAU-XXXXXX</div>
-      </div>
-    </div>
-
   </div>
+</div>
 
+<!-- WIN -->
+<div id="win" class="screen">
+  <h1>✅ Delivery Successful!</h1>
+  <div id="voucherCard">
+    <h2>🎁 Grab Voucher</h2>
+    <p>Show this to redeem</p>
+    <div class="voucher-code">GRAB-2N22DY</div>
+  </div>
+</div>
+
+<!-- LOSE -->
+<div id="lose" class="screen">
+  <h1>❌ Delivery Failed</h1>
+  <p>You hit traffic or ran out of time.</p>
+  <button class="control-btn" onclick="location.reload()">Try Again</button>
+</div>
+
+<!-- CONTROLS -->
+<div id="controls" style="display:none;">
+  <div></div>
+  <button class="control-btn" onclick="move('up')">⬆️</button>
+  <div></div>
+  <button class="control-btn" onclick="move('left')">⬅️</button>
+  <button class="control-btn" onclick="move('down')">⬇️</button>
+  <button class="control-btn" onclick="move('right')">➡️</button>
 </div>
 
 <script>
-  let timeLeft = 20;
-  let progress = 0;
-  let gameOver = false;
-  let countdown;
+let player = document.getElementById("player");
+let destination = document.getElementById("destination");
+let gameArea = document.getElementById("gameArea");
+let timeEl = document.getElementById("time");
 
-  const introEl = document.getElementById("intro");
-  const gameEl = document.getElementById("game");
-  const timerEl = document.getElementById("timer");
-  const statusEl = document.getElementById("status");
-  const animationEl = document.getElementById("animation");
-  const progressBar = document.getElementById("progressBar");
-  const progressText = document.getElementById("progressText");
-  const resultEl = document.getElementById("result");
-  const voucherEl = document.getElementById("voucher");
-  const voucherCodeEl = document.getElementById("voucherCodeCard");
-  const buttons = document.querySelectorAll("#game button");
+let x = 160, y = 440;
+let timeLeft = 30;
+let obstacles = [];
+let speed = 4;
+let running = false;
+let ended = false;
 
-  function chooseScenario(type) {
-    introEl.style.display = "none";
-    gameEl.style.display = "block";
+/* Screen control */
+function show(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
 
-    if (type === "traffic") {
-      timeLeft = 18;
-      statusEl.textContent = "Traffic jam everywhere. Stay calm!";
-      animationEl.textContent = "🛵 🚗🚗🚗";
-    }
+/* Start */
+function startGame() {
+  show("game");
+  document.getElementById("controls").style.display = "grid";
+  createObstacles();
+  running = true;
+  ended = false;
 
-    if (type === "rain") {
-      timeLeft = 20;
-      statusEl.textContent = "Rain reduces visibility. Ride carefully!";
-      animationEl.textContent = "🛵 🌧️";
-    }
-
-    if (type === "peak") {
-      timeLeft = 16;
-      statusEl.textContent = "Peak hour rush! Orders piling up!";
-      animationEl.textContent = "🛵 ⏰";
-    }
-
-    updateUI();
-    startTimer();
-  }
-
-  function startTimer() {
-    countdown = setInterval(() => {
-      if (gameOver) return;
-      timeLeft--;
-      updateUI();
-      if (timeLeft <= 0) endGame(false);
-    }, 1000);
-  }
-
-  function takeAction(action) {
-    if (gameOver) return;
-
-    let r = Math.random();
-
-    if (action === "lane") {
-      if (r > 0.5) {
-        timeLeft += 2;
-        progress += 10;
-        statusEl.textContent = "Smooth lane change! +10% progress";
-      } else {
-        timeLeft -= 2;
-        statusEl.textContent = "Blocked by traffic! -2s";
-      }
-    }
-
-    if (action === "speed") {
-      if (r > 0.6) {
-        timeLeft += 3;
-        progress += 15;
-        statusEl.textContent = "Clear road ahead! +15% progress";
-      } else {
-        timeLeft -= 3;
-        statusEl.textContent = "Forced to slow down! -3s";
-      }
-    }
-
-    if (action === "shortcut") {
-      if (r > 0.4) {
-        timeLeft += 4;
-        progress += 25;
-        statusEl.textContent = "Shortcut works! +25% progress";
-      } else {
-        timeLeft -= 4;
-        statusEl.textContent = "Wrong turn! -4s";
-      }
-    }
-
-    if (progress > 100) progress = 100;
-    if (timeLeft < 0) timeLeft = 0;
-
-    updateUI();
-
-    if (progress >= 100) endGame(true);
+  setInterval(() => {
+    if (!running || ended) return;
+    timeLeft--;
+    timeEl.innerText = timeLeft;
     if (timeLeft <= 0) endGame(false);
+  }, 1000);
+
+  requestAnimationFrame(gameLoop);
+}
+
+/* Movement */
+function move(dir) {
+  if (!running) return;
+  let step = 20;
+  if (dir === "up" && y > 0) y -= step;
+  if (dir === "down" && y < 460) y += step;
+  if (dir === "left" && x > 0) x -= step;
+  if (dir === "right" && x < 320) x += step;
+  player.style.left = x + "px";
+  player.style.top = y + "px";
+}
+
+/* Obstacles */
+function createObstacles() {
+  for (let i = 0; i < 5; i++) {
+    let o = document.createElement("div");
+    o.className = "obstacle";
+    o.innerText = "🚗";
+    resetObstacle(o);
+    gameArea.appendChild(o);
+    obstacles.push(o);
   }
+}
 
-  function updateUI() {
-    timerEl.textContent = timeLeft;
-    progressBar.style.width = progress + "%";
-    progressText.textContent = progress + "%";
-  }
+function resetObstacle(o) {
+  o.style.left = Math.random() * 320 + "px";
+  o.style.top = -(Math.random() * 400 + 40) + "px";
+}
 
-  function endGame(win) {
-    gameOver = true;
-    clearInterval(countdown);
-    buttons.forEach(b => b.disabled = true);
+/* Collision */
+function collide(a, b) {
+  let r1 = a.getBoundingClientRect();
+  let r2 = b.getBoundingClientRect();
+  return !(r1.right < r2.left || r1.left > r2.right || r1.bottom < r2.top || r1.top > r2.bottom);
+}
 
-    if (win) {
-      resultEl.textContent = "✅ Delivery Completed On Time!";
-      resultEl.style.color = "green";
+/* Game loop */
+function gameLoop() {
+  if (!running || ended) return;
 
-      const code = "HIJAU-" + Math.random().toString(36).substr(2,6).toUpperCase();
-      voucherCodeEl.textContent = code;
-      voucherEl.style.display = "block";
-    } else {
-      resultEl.textContent = "❌ Delivery Failed. Time’s Up!";
-      resultEl.style.color = "red";
-    }
-  }
+  obstacles.forEach(o => {
+    o.style.top = o.offsetTop + speed + "px";
+    if (o.offsetTop > 520) resetObstacle(o);
+    if (collide(player, o)) endGame(false);
+  });
+
+  if (collide(player, destination)) endGame(true);
+
+  requestAnimationFrame(gameLoop);
+}
+
+/* End */
+function endGame(win) {
+  if (ended) return; // 🔑 prevent double trigger
+  ended = true;
+  running = false;
+  document.getElementById("controls").style.display = "none";
+  show(win ? "win" : "lose");
+}
 </script>
 
 </body>
 </html>
-
